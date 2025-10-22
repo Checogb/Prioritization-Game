@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Eisenhower Matrix Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .matrix { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 10px; margin-top: 20px; }
+        .quadrant { border: 2px solid #000; padding: 10px; min-height: 200px; }
+        #q1 { background-color: #ffcccc; }
+        #q2 { background-color: #ccffcc; }
+        #q3 { background-color: #ffffcc; }
+        #q4 { background-color: #cce5ff; }
+        .task { padding: 5px; margin: 5px; background-color: #eee; cursor: move; }
+        .alert { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Eisenhower Matrix Tool</h1>
+    <label for="taskSelect">Select Task:</label>
+    <select id="taskSelect">
+        <option>Email Follow-up</option>
+        <option>Prepare Presentation</option>
+        <option>Schedule Meeting</option>
+        <option>Review Reports</option>
+        <option>Update Project Plan</option>
+        <option>Respond to Client</option>
+        <option>Organize Files</option>
+        <option>Brainstorm Ideas</option>
+        <option>Team Check-in</option>
+        <option>Analyze Data</option>
+        <option>Supplier Negotiation</option>
+        <option>Purchase Order Creation</option>
+        <option>Contract Review</option>
+        <option>Vendor Performance Analysis</option>
+        <option>Cost Reduction Strategy</option>
+        <option>Inventory Management</option>
+        <option>Compliance Check</option>
+        <option>RFQ Preparation</option>
+        <option>Stakeholder Meeting</option>
+        <option>Market Research</option>
+        <option>Supplier Capacity Confirmation</option>
+        <option>Shortage Mitigation</option>
+        <option>Risk Assessment</option>
+        <option>Technical Specification Review</option>
+        <option>Prototype Sourcing</option>
+        <option>Launch Readiness Check</option>
+        <option>Alternate Supplier Identification</option>
+        <option>Emergency Escalation</option>
+        <option>Supply Chain Risk Monitoring</option>
+    </select>
+    <label for="taskTime">Time (hrs):</label>
+    <select id="taskTime">
+        <option value="0.5">0.5</option>
+<option value="1.0">1.0</option>
+<option value="1.5">1.5</option>
+<option value="2.0">2.0</option>
+<option value="2.5">2.5</option>
+<option value="3.0">3.0</option>
+<option value="3.5">3.5</option>
+<option value="4.0">4.0</option>
+<option value="4.5">4.5</option>
+<option value="5.0">5.0</option>
+<option value="5.5">5.5</option>
+<option value="6.0">6.0</option>
+<option value="6.5">6.5</option>
+<option value="7.0">7.0</option>
+<option value="7.5">7.5</option>
+<option value="8.0">8.0</option>
+<option value="8.5">8.5</option>
+<option value="9.0">9.0</option>
+    </select>
+    <button onclick="addTask()">Add Task</button>
+    <button onclick="resetMatrix()">Reset</button>
+    <div class="matrix">
+        <div id="q1" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Urgent & Important (40%)</h3>
+        </div>
+        <div id="q2" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Not Urgent & Important (30%)</h3>
+        </div>
+        <div id="q3" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Urgent & Not Important (15%)</h3>
+        </div>
+        <div id="q4" class="quadrant" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3>Not Urgent & Not Important (5%)</h3>
+        </div>
+    </div>
+    <p id="alert" class="alert"></p>
+    <script>
+        let taskId = 0;
+        let quadrantLimits = { q1: 3.6, q2: 2.7, q3: 1.35, q4: 0.45 };
+        let quadrantTimes = { q1: 0, q2: 0, q3: 0, q4: 0 };
+
+        function addTask() {
+            const taskName = document.getElementById('taskSelect').value;
+            const taskTime = parseFloat(document.getElementById('taskTime').value);
+            const task = document.createElement('div');
+            task.className = 'task';
+            task.draggable = true;
+            task.id = 'task' + taskId++;
+            task.dataset.time = taskTime;
+            task.addEventListener('dragstart', drag);
+            task.innerText = `${taskName} (${taskTime} hrs)`;
+            document.body.appendChild(task);
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const task = document.getElementById(data);
+            const target = ev.target.closest('.quadrant');
+            if (target && target.id) {
+                target.appendChild(task);
+                updateTime();
+            }
+        }
+
+        function updateTime() {
+            quadrantTimes = { q1: 0, q2: 0, q3: 0, q4: 0 };
+            ['q1', 'q2', 'q3', 'q4'].forEach(q => {
+                const tasks = document.getElementById(q).getElementsByClassName('task');
+                for (let t of tasks) {
+                    quadrantTimes[q] += parseFloat(t.dataset.time);
+                }
+            });
+            let alertMsg = '';
+            for (let q in quadrantTimes) {
+                if (quadrantTimes[q] > quadrantLimits[q]) {
+                    alertMsg += `Time in ${q.toUpperCase()} exceeds limit!
+`;
+                }
+            }
+            document.getElementById('alert').innerText = alertMsg;
+        }
+
+        function resetMatrix() {
+            ['q1', 'q2', 'q3', 'q4'].forEach(q => {
+                const quadrant = document.getElementById(q);
+                while (quadrant.firstChild && quadrant.firstChild.className === 'task') {
+                    quadrant.removeChild(quadrant.firstChild);
+                }
+            });
+            document.getElementById('alert').innerText = '';
+        }
+    </script>
+</body>
+</html>
